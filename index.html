@@ -1,0 +1,315 @@
+<html>
+    <head>
+        <style>
+            body {
+                margin: 0;
+            }
+
+            .gallery_wrapper {
+                overflow: hidden;
+                width: 100vw;
+                height: 100vh;
+                position: relative;
+            }
+
+            #circle_list {
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                list-style: none;
+                margin: 0;
+                padding: 0;
+                left: -171px;
+                top: calc(50vh - 200px);
+            }
+
+            #circle_list li {
+                position: absolute;
+                text-align: center;
+                font-size: 40px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                background: url(./squircle\ card.svg);
+                background-size: contain;
+                background-position: center;
+                background-repeat: no-repeat;
+                user-select: none;
+            }
+
+            /* #circle_list li.active {
+            width: 500px;
+            height: 625px;
+            font-size: 50px;
+            margin-left: -50px;
+        } */
+            /* #circle_list li img {
+            width: 300px;
+            height: 300px;
+        } */
+        </style>
+    </head>
+
+    <body>
+        <div class="gallery_wrapper">
+            <ul id="circle_list">
+                <li>1</li>
+                <li>2</li>
+                <li>3</li>
+                <li>4</li>
+                <li>5</li>
+                <li>6</li>
+                <li>7</li>
+                <li>8</li>
+                <li>9</li>
+                <li>10</li>
+                <li>11</li>
+                <li>12</li>
+                <li>13</li>
+                <li>14</li>
+                <li>15</li>
+                <li>16</li>
+                <li>17</li>
+                <li>18</li>
+                <li>19</li>
+                <li>20</li>
+                <li>21</li>
+                <li>22</li>
+                <li>23</li>
+                <li>24</li>
+                <li>25</li>
+            </ul>
+        </div>
+        <script>
+            var radius = 300;
+            var angleSteps = 360 / document.getElementsByTagName('li').length;
+            var activeIndex = 0,
+                prevActiveIndex = 0;
+            var baseAngle = 0;
+            var increaseSizeX = 100,
+                increaseSizeY = 89;
+            var defaultWidth = 342,
+                defaultHeight = 311;
+
+            function updateListPositions(transition = false, time) {
+                var all = document.getElementsByTagName('li');
+                var tmpIndex = mathRest(-baseAngle, 360) / angleSteps;
+                var sizeIndex1 = Math.ceil(tmpIndex);
+                var sizeIndex2 = Math.floor(tmpIndex);
+
+                for (var i = 0, max = all.length; i < max; i++) {
+                    if (transition) {
+                        all[i].style.transition = 'all 0.3s ease-out';
+                    }
+                    // Do something with the element here
+                    var rotate = baseAngle - 90;
+                    var angle = rotate + i * angleSteps;
+                    var centerX = window.innerWidth / 2;
+                    // var centerY = window.innerHeight * 2 + 10;
+                    // var distance = window.innerHeight * 2;
+                    var centerY = 1590;
+                    var distance = 1590;
+                    var x = distance * Math.cos(angle * (Math.PI / 180));
+                    var y = distance * Math.sin(angle * (Math.PI / 180));
+                    all[i].style.left = centerX + x;
+                    all[i].style.top = centerY + y;
+                    all[i].style.width = defaultWidth + 'px';
+                    all[i].style.height = defaultHeight + 'px';
+                    all[i].style.marginLeft = 0;
+                    all[i].style.transform = 'rotate(' + (angleSteps * i + rotate + 90) + 'deg)';
+
+                    if (sizeIndex1 % max == i) {
+                        all[i].style.width = (1 - Math.abs(sizeIndex1 - tmpIndex)) * increaseSizeX + defaultWidth;
+                        all[i].style.height = (1 - Math.abs(sizeIndex1 - tmpIndex)) * increaseSizeY + defaultHeight;
+                        all[i].style.marginLeft = ((Math.abs(sizeIndex1 - tmpIndex) - 1) * increaseSizeX) / 2 + 'px';
+                    } else if (sizeIndex2 % max == i) {
+                        all[i].style.width = (1 - Math.abs(sizeIndex2 - tmpIndex)) * increaseSizeX + defaultWidth;
+                        all[i].style.height = (1 - Math.abs(sizeIndex2 - tmpIndex)) * increaseSizeY + defaultHeight;
+                        all[i].style.marginLeft = ((Math.abs(sizeIndex2 - tmpIndex) - 1) * increaseSizeX) / 2 + 'px';
+                    }
+
+                    if (transition) {
+                        setTimeout(
+                            (ele) => {
+                                ele.style.transition = '';
+                            },
+                            2000,
+                            all[i]
+                        );
+                    }
+                }
+            }
+
+            window.onresize = () => {
+                updateListPositions();
+            };
+
+            updateListPositions();
+
+            const container = document.querySelector('#circle_list');
+            let isDown = false;
+            let startX;
+            let prevX;
+            let scrolledLeft = 0;
+            var velX = 0,
+                origVelX = 0;
+            var velFlag = false;
+            var moveInterval = null;
+            var mousePosX = -1,
+                prevMousePosX = -1;
+            var momentumID;
+
+            container.addEventListener('mousedown', (e) => {
+                isDown = true;
+                prevX = e.x;
+                prevMousePosX = e.x;
+                cancelMomentumTracking();
+                moveInterval = setInterval(checkSpeed, 50);
+                mousePosX = -1;
+            });
+
+            container.addEventListener('touchstart', (e) => {
+                isDown = true;
+                prevX = e.touches[0].clientX;
+                prevMousePosX = e.touches[0].clientX;
+                cancelMomentumTracking();
+                moveInterval = setInterval(checkSpeed, 50);
+                mousePosX = -1;
+            });
+
+            container.addEventListener('mouseleave', () => {
+                isDown = false;
+                clearInterval(moveInterval);
+            });
+
+            container.addEventListener('touchcancel', () => {
+                isDown = false;
+                clearInterval(moveInterval);
+            });
+
+            container.addEventListener('mouseup', () => {
+                isDown = false;
+                beginMomentumTracking();
+                clearInterval(moveInterval);
+            });
+
+            container.addEventListener('touchend', () => {
+                isDown = false;
+                beginMomentumTracking();
+                clearInterval(moveInterval);
+            });
+
+            container.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+
+                moveFunction(e.x);
+            });
+
+            container.addEventListener('touchmove', (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+
+                moveFunction(e.touches[0].clientX);
+            });
+
+            // Momentum
+
+            function moveFunction(clientX) {
+                const x = clientX - prevX;
+                baseAngle += ((x / container.offsetWidth) * 360 * 3.14) / document.getElementsByTagName('li').length; //scroll-fast
+
+                updateListPositions();
+
+                prevX = clientX;
+                mousePosX = clientX;
+            }
+            function checkSpeed() {
+                if (!isDown) return;
+                velX = ((mousePosX - prevMousePosX) / container.offsetWidth) * 1 * 360;
+
+                prevMousePosX = mousePosX;
+            }
+
+            function beginMomentumTracking() {
+                cancelMomentumTracking();
+                origVelX = velX;
+
+                momentumID = requestAnimationFrame(momentumLoop);
+            }
+
+            function cancelMomentumTracking() {
+                cancelAnimationFrame(momentumID);
+            }
+
+            let delta;
+            let origBaseAngle;
+            let easeOutRate = 0;
+
+            function momentumLoop() {
+                baseAngle += velX;
+                velX *= 0.8;
+                updateListPositions();
+                if (Math.abs(velX) > 0.2) {
+                    momentumID = requestAnimationFrame(momentumLoop);
+                } else {
+                    //momentum scrolling is ended.
+                    delta = mathRest(baseAngle, angleSteps);
+
+                    if (Math.abs(origVelX) < 20) delta = delta - angleSteps / 2 > 0 ? angleSteps - delta : -delta;
+                    else if (origVelX < 0) delta = -delta;
+                    else delta = angleSteps - delta;
+
+                    origBaseAngle = baseAngle;
+                    easeOutRate = 0;
+
+                    cancelAnimationFrame(momentumID);
+
+                    momentumID = requestAnimationFrame(momentumLastLoop);
+
+                    // setTimeout(setActiveNode, 500);
+                }
+            }
+
+            function momentumLastLoop() {
+                if (easeOutRate != 20) {
+                    
+                    bounce = easeOutBounce(easeOutRate * 0.05);
+                    momentumID = requestAnimationFrame(momentumLastLoop);
+                    console.log(delta * bounce)
+
+                    baseAngle = origBaseAngle + delta * bounce;
+                    updateListPositions();
+                    easeOutRate ++;
+                } else {
+                    cancelAnimationFrame(momentumID);
+                }
+            }
+
+            function easeOutBounce(x) {
+                const n1 = 7.5625;
+                const d1 = 2.75;
+
+                if (x < 1 / d1) {
+                    return n1 * x * x;
+                } else if (x < 2 / d1) {
+                    return n1 * (x -= 1.5 / d1) * x + 0.75;
+                } else if (x < 2.5 / d1) {
+                    return n1 * (x -= 2.25 / d1) * x + 0.9375;
+                } else {
+                    return n1 * (x -= 2.625 / d1) * x + 0.984375;
+                }
+            }
+
+            function mathRest(num, div) {
+                return ((num % div) + div) % div;
+            }
+
+            function setActiveNode() {
+                let activeIndex = Math.round(mathRest(-baseAngle, 360) / angleSteps);
+
+                document.getElementsByTagName('li')[activeIndex].classList.add('active');
+            }
+        </script>
+    </body>
+</html>
